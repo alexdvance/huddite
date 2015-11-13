@@ -1,0 +1,14 @@
+{
+  "generator-angular-meteor": {
+    "filters": {
+      "js": true,
+      "html": true,
+      "scss": true,
+      "pagination": true,
+      "framework": "material",
+      "bower": true,
+      "auth": true
+    },
+    "appname": "huddite"
+  }
+}
