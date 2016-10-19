@@ -1,0 +1,23 @@
+{
+  "name": "huddite",
+  "version": "1.0.0",
+  "description": "Cool app",
+  "main": "app.ng.js",
+  "dependencies": {
+    "scss-flex-grid": "^0.3.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "karma"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexdvance/huddite.git"
+  },
+  "author": "Alex Vance",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alexdvance/huddite/issues"
+  },
+  "homepage": "https://github.com/alexdvance/huddite#readme"
+}
