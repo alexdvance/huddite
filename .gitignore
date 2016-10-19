@@ -1,1 +1,3 @@
 .meteor
+*.sublime-project
+*.sublime-workspace
