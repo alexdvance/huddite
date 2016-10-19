@@ -3,7 +3,7 @@
 angular.module('hudditeApp')
 .controller('MainCtrl', function($scope, $meteor) {
   $scope.page = 1;
-  $scope.perPage = 3;
+  $scope.perPage = 6;
   $scope.sort = {name_sort : 1};
   $scope.orderProperty = '1';
   
@@ -31,6 +31,11 @@ angular.module('hudditeApp')
       
   $scope.remove = function(thing) {
     $scope.things.remove(thing);
+  };
+      
+  $scope.update = function(thing) {
+    thing.last_done = new Date();
+    $scope.things.update(thing);
   };
     
   $scope.pageChanged = function(newPage) {
