@@ -1,1 +1,34 @@
 // app.scss
+// @import "scss-flex-grid/flex-grid";
+@import "./node_modules/scss-flex-grid/flex-grid";
+@import "chease-picker/chease-picker";
+
+.container {
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.row {
+  width: 100%;
+}
+
+.toolbar {
+  display: block;
+}
+
+.list-reset {
+  padding-left: 0;
+  list-style: none;
+}
+
+.list-cool {
+  display: block;
+  padding: 5px;
+  background: #DDD;
+  border-bottom: 1px solid #AAA;
+}
+
+.float-right {
+  float: right;
+}
