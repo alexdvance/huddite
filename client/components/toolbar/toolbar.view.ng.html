@@ -1,10 +1,14 @@
-<md-toolbar class="toolbar" layout="row" layout-align="start center" layout-padding="">
-  <div class="navbar-left" layout="row" layout-align="center center">
-    <blaze-template name="loginButtons"></blaze-template>
-    <md-button ng-href="/about">About</md-button>
+<md-toolbar class="toolbar">
+  <div class="container" layout="row" layout-align="start center" layout-padding="">
+    <div class="row">
+      <div class="col-xs-6 navbar-left" layout="row" layout-align="center center">
+        <a href="/">hudditeApp</a>
+      </div>
+
+      <navbar-right class="col-xs-6">
+        <md-button ng-href="/about">About</md-button>
+        <!-- <blaze-template name="loginButtons"></blaze-template> -->
+      </navbar-right>
+    </div>
   </div>
-  <span flex=''></span>
-  <navbar-right>
-    <a href="/">hudditeApp</a>
-  </navbar-right>
 </md-toolbar>
