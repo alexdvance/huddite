@@ -1,8 +1,9 @@
 // app.scss
 // @import "scss-flex-grid/flex-grid";
-@import "./node_modules/scss-flex-grid/flex-grid";
-@import "components/toolbar/toolbar";
-@import "components/chease-picker/chease-picker";
+@import './node_modules/scss-flex-grid/flex-grid';
+@import 'scss/animations';
+@import 'components/toolbar/toolbar';
+@import 'components/chease-picker/chease-picker';
 
 .container {
   max-width: 960px;
@@ -12,6 +13,11 @@
 
 .row {
   width: 100%;
+}
+
+.vert-center-row {
+  display: flex;
+  align-items: center;
 }
 
 .toolbar {
