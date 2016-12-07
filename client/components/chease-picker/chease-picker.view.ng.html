@@ -1,9 +1,11 @@
 <div class="toolbar" layout="row" layout-align="start center" layout-padding="">
   <div>chease-picker</div>
   <button class="randomize">randomize</button>
-  <button class="js-randomize">spin</button>
+  <button class="js-randomize"
+          ng-click="spin()">spin</button>
   <div id="chease-picker-graph" class="chease-picker-graph">
-    <div class="spinner--wrapper">
+    <div class="spinner--wrapper"
+         ng-class="{ 'spin': spinning }">
       <div class="spinner--pointer"></div>
     </div>
   </div>

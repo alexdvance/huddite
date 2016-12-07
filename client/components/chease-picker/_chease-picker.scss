@@ -1,3 +1,5 @@
+
+
 .chease-picker-graph {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   width: 960px;
@@ -28,14 +30,19 @@
 .spinner--wrapper {
   position: absolute;
   left: 50%;
-  width: 200px;
-  height: 200px;
-  margin-top: -125px;
-  margin-left: -45px;
   right: 0;
   top: 50%;
   bottom: 0;
+  width: 200px;
+  height: 200px;
+  margin-top: -125px;
+  margin-left: -93px;
   display: block;
+  transform: rotate(0deg);
+
+  &.spin {
+    animation: spin 1s infinite linear;
+  }
 }
 
 .spinner--pointer {
@@ -45,5 +52,5 @@
     margin-right: -2px;
     top: 0;
     bottom: 50%;
-    border-right: 6px solid black;
+    border-right: 2px solid #757575;
 }
