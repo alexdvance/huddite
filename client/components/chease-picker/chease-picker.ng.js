@@ -73,23 +73,24 @@ angular.module('hudditeApp')
     var radius;
     var arc;
     var outerArc;
-    var sliceColors;
 
     var key = function(d){
         return d.data.label;
     };
 
-    // mapData
-    function mapData() {
-        var labels = sliceColors.domain();
-        return labels.map(function(label) {
-            return { label: label, value: config.slices[label] }
-        });
+    function midAngle(d){
+        return d.startAngle + (d.endAngle - d.startAngle)/2;
     }
 
-    this.init = function(_config) {
-        config = _config;
+    var setupPie = function() {
+        pie = d3.layout.pie()
+            .sort(null)
+            .value(function(d) {
+                return d.value;
+            });
+    }
 
+    var setupSVGElement = function() {
        svg = d3.select(config.element)
             .append("svg")
             .append("g");
@@ -103,12 +104,6 @@ angular.module('hudditeApp')
 
         radius = Math.min(config.width, config.height) / 2;
 
-        pie = d3.layout.pie()
-            .sort(null)
-            .value(function(d) {
-                return d.value;
-            });
-
         arc = d3.svg.arc()
             .outerRadius(radius * 0.8)
             .innerRadius(radius * 0.4);
@@ -118,107 +113,122 @@ angular.module('hudditeApp')
             .outerRadius(radius * 0.9);
 
         svg.attr("transform", "translate(" + config.width / 2 + "," + config.height / 2 + ")");
+    }
 
-        var sliceLabels = Object.keys(config.slices);
+    this.init = function(_config) {
+        config = _config;
 
-        sliceColors = d3.scale.ordinal()
-            .domain(sliceLabels)
+        setupPie();
+        setupSVGElement();
+
+        var labels = Object.keys(config.slices);
+
+        // Creates d3 ordinal object with labels and colors
+        var sliceOrdinal = d3.scale.ordinal()
+            .domain(labels)
             .range(config.colors);
 
-        change(mapData())
+        drawPieChart(sliceOrdinal);
     };
 
-    // change
-    var change = function(data) {
-        function midAngle(d){
-            return d.startAngle + (d.endAngle - d.startAngle)/2;
+    // drawPieChart
+    var drawPieChart = function(sliceOrdinal) {
+        /* ------- PIE SLICES -------*/
+        function drawSlices() {
+            var slice = svg.select(".slices").selectAll("path.slice")
+                .data(pie(data), key);
+
+            slice.enter()
+                .insert("path")
+                .style("fill", function(d) { return sliceOrdinal(d.data.label); })
+                .attr("class", "slice");
+
+            slice
+                .transition().duration(1000)
+                .attrTween("d", function(d) {
+                    this._current = this._current || d;
+                    var interpolate = d3.interpolate(this._current, d);
+                    this._current = interpolate(0);
+                    return function(t) {
+                        return arc(interpolate(t));
+                    };
+                });
+
+            slice.exit()
+                .remove();
         }
 
 
-        /* ------- PIE SLICES -------*/
-        var slice = svg.select(".slices").selectAll("path.slice")
-            .data(pie(data), key);
-
-        slice.enter()
-            .insert("path")
-            .style("fill", function(d) { return sliceColors(d.data.label); })
-            .attr("class", "slice");
-
-        slice
-            .transition().duration(1000)
-            .attrTween("d", function(d) {
-                this._current = this._current || d;
-                var interpolate = d3.interpolate(this._current, d);
-                this._current = interpolate(0);
-                return function(t) {
-                    return arc(interpolate(t));
-                };
-            });
-
-        slice.exit()
-            .remove();
-
-
         /* ------- TEXT LABELS -------*/
+        function drawLabels() {
+            var text = svg.select(".labels").selectAll("text")
+                .data(pie(data), key);
 
-        var text = svg.select(".labels").selectAll("text")
-            .data(pie(data), key);
+            text.enter()
+                .append("text")
+                .attr("dy", ".35em")
+                .text(function(d) {
+                    return d.data.label;
+                });
 
-        text.enter()
-            .append("text")
-            .attr("dy", ".35em")
-            .text(function(d) {
-                return d.data.label;
-            });
+            text.transition().duration(1000)
+                .attrTween("transform", function(d) {
+                    this._current = this._current || d;
+                    var interpolate = d3.interpolate(this._current, d);
+                    this._current = interpolate(0);
+                    return function(t) {
+                        var d2 = interpolate(t);
+                        var pos = outerArc.centroid(d2);
+                        pos[0] = radius * (midAngle(d2) < Math.PI ? 1 : -1);
+                        return "translate("+ pos +")";
+                    };
+                })
+                .styleTween("text-anchor", function(d){
+                    this._current = this._current || d;
+                    var interpolate = d3.interpolate(this._current, d);
+                    this._current = interpolate(0);
+                    return function(t) {
+                        var d2 = interpolate(t);
+                        return midAngle(d2) < Math.PI ? "start":"end";
+                    };
+                });
 
-        text.transition().duration(1000)
-            .attrTween("transform", function(d) {
-                this._current = this._current || d;
-                var interpolate = d3.interpolate(this._current, d);
-                this._current = interpolate(0);
-                return function(t) {
-                    var d2 = interpolate(t);
-                    var pos = outerArc.centroid(d2);
-                    pos[0] = radius * (midAngle(d2) < Math.PI ? 1 : -1);
-                    return "translate("+ pos +")";
-                };
-            })
-            .styleTween("text-anchor", function(d){
-                this._current = this._current || d;
-                var interpolate = d3.interpolate(this._current, d);
-                this._current = interpolate(0);
-                return function(t) {
-                    var d2 = interpolate(t);
-                    return midAngle(d2) < Math.PI ? "start":"end";
-                };
-            });
-
-        text.exit()
-            .remove();
+            text.exit()
+                .remove();
+        }
 
 
         /* ------- SLICE TO TEXT POLYLINES -------*/
+        function drawPolylines() {
+            var polyline = svg.select(".lines").selectAll("polyline")
+                .data(pie(data), key);
 
-        var polyline = svg.select(".lines").selectAll("polyline")
-            .data(pie(data), key);
+            polyline.enter()
+                .append("polyline");
 
-        polyline.enter()
-            .append("polyline");
+            polyline.transition().duration(1000)
+                .attrTween("points", function(d){
+                    this._current = this._current || d;
+                    var interpolate = d3.interpolate(this._current, d);
+                    this._current = interpolate(0);
+                    return function(t) {
+                        var d2 = interpolate(t);
+                        var pos = outerArc.centroid(d2);
+                        pos[0] = radius * 0.95 * (midAngle(d2) < Math.PI ? 1 : -1);
+                        return [arc.centroid(d2), outerArc.centroid(d2), pos];
+                    };
+                });
 
-        polyline.transition().duration(1000)
-            .attrTween("points", function(d){
-                this._current = this._current || d;
-                var interpolate = d3.interpolate(this._current, d);
-                this._current = interpolate(0);
-                return function(t) {
-                    var d2 = interpolate(t);
-                    var pos = outerArc.centroid(d2);
-                    pos[0] = radius * 0.95 * (midAngle(d2) < Math.PI ? 1 : -1);
-                    return [arc.centroid(d2), outerArc.centroid(d2), pos];
-                };
-            });
+            polyline.exit()
+                .remove();
+        }
 
-        polyline.exit()
-            .remove();
+        var data = sliceOrdinal.domain().map(function(label) {
+            return { label: label, value: config.slices[label] }
+        });
+
+        drawSlices();
+        drawLabels();
+        drawPolylines();
     };
 }]);
