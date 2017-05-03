@@ -35,7 +35,7 @@ angular.module('hudditeApp')
       var userId = 'djadvance22';
       LastfmAPI.getUserInfo(userId).then(function(data) {
         console.log('userinfo', data)
-        $scope.playCount = data.playcount;
+        $scope.playCount = data.user.playcount;
       });
     }
   };
