@@ -4,7 +4,8 @@
   "description": "Cool app",
   "main": "app.ng.js",
   "dependencies": {
-    "scss-flex-grid": "^0.3.2"
+    "babel-runtime": "^6.23.0",
+    "scss-flex-grid": "^0.3.5"
   },
   "devDependencies": {},
   "scripts": {
