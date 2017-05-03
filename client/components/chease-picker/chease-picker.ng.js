@@ -28,7 +28,6 @@ angular.module('hudditeApp')
           scope.spinning = true;
 
           $timeout(function() {
-            console.log('dungbutt')
             var spinnerWrapper = elem.find('.spinner--wrapper');
             scope.spinning = false;
           }, waitTime);
