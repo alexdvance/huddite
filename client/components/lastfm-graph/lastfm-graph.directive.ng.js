@@ -1,32 +1,42 @@
 'use strict'
 
 angular.module('hudditeApp')
-.factory('LastfmAPIService', ['$resource', '$q', function($resource, $q) {
-  // Define CreditCard class
-  var Charts = $resource('//ws.audioscrobbler.com/2.0/?method=user.getweeklychartlist&user=:userId&api_key=:apiKey&format=json',
+.factory('LastfmAPI', ['$resource', '$q', function($resource, $q) {
+  const API_KEY = 'cea4e7aab1d913b9baa5584c0cc43375';
+
+  var UserInfo = $resource(
+    '//ws.audioscrobbler.com/2.0/?method=user.getinfo&user=:userId&api_key=:apiKey&format=json',
+   {userId:'@id', apiKey:'@apiKey'}
+  );
+  var Charts = $resource(
+    '//ws.audioscrobbler.com/2.0/?method=user.getweeklychartlist&user=:userId&api_key=:apiKey&format=json',
    {userId:'@id', apiKey:'@apiKey'}
   );
 
+  var getUserInfo = function(userId, apiKey) {
+    return UserInfo.get({ userId: userId, apiKey: API_KEY }).$promise;
+  };
+
   var getWeeklyChartList = function(userId, apiKey) {
-    // We can retrieve a collection from the server
-    var stats = Charts.get({userId:userId, apiKey:apiKey}, function() {
-      console.log(stats);
-    });
+    return Charts.get({ userId: userId, apiKey: API_KEY }).$promise;
   };
 
   return {
-    getWeeklyChartList: getWeeklyChartList
+    getUserInfo: getUserInfo,
+    getWeeklyChartList: getWeeklyChartList,
   };
 }])
-.directive('lastfmGraph', ['LastfmAPIService', function(LastfmAPIService) {
+.directive('lastfmGraph', ['LastfmAPI', function(LastfmAPI) {
   return {
     restrict: 'AE',
     templateUrl: 'client/components/lastfm-graph/lastfm-graph.view.ng.html',
     replace: true,
-    link: function() {
+    link: function($scope) {
       var userId = 'djadvance22';
-      var API_KEY = 'cea4e7aab1d913b9baa5584c0cc43375';
-      LastfmAPIService.getWeeklyChartList(userId, API_KEY);
+      LastfmAPI.getUserInfo(userId).then(function(data) {
+        console.log('userinfo', data)
+        $scope.playCount = data.playcount;
+      });
     }
   };
 }]);
