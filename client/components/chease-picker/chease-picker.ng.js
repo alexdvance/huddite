@@ -4,202 +4,221 @@
 angular.module('hudditeApp')
 
 .directive('cheasePicker', [
-  '$timeout',
-  function($timeout) {
-    return {
-      restrict: 'AE',
-      templateUrl: 'client/components/chease-picker/chease-picker.view.ng.html',
-      replace: true,
-      link: function(scope, elem, attrs) {
-        scope.spinning = false;
+    '$timeout',
+    'PieChart',
+    function($timeout, PieChart) {
+        return {
+            restrict: 'AE',
+            templateUrl: 'client/components/chease-picker/chease-picker.view.ng.html',
+            replace: true,
+            link: function(scope, elem, attrs) {
+                scope.spinning = false;
 
-        scope.spin = function() {
-          var LENGTH_OF_SPIN = 1000;
-          var MIN_SPINS = 4;
-          var INTERVALS = 360;
-          var INTERVAL_LENGTH = LENGTH_OF_SPIN / INTERVALS;
+                function randomIntFromInterval(min, max) {
+                    return Math.floor(Math.random() * (max - min + 1) + min);
+                }
 
-          var randomIntervalCount = randomIntFromInterval(1, INTERVALS);
-          var waitTime = 0;
+                scope.spin = function() {
+                    var LENGTH_OF_SPIN = 1000;
+                    var MIN_SPINS = 4;
+                    var INTERVALS = 360;
+                    var INTERVAL_LENGTH = LENGTH_OF_SPIN / INTERVALS;
 
-          waitTime = LENGTH_OF_SPIN * MIN_SPINS;
-          waitTime += INTERVAL_LENGTH  * randomIntervalCount;
+                    var randomIntervalCount = randomIntFromInterval(1, INTERVALS);
+                    var waitTime = 0;
 
-          scope.spinning = true;
+                    waitTime = LENGTH_OF_SPIN * MIN_SPINS;
+                    waitTime += INTERVAL_LENGTH  * randomIntervalCount;
 
-          $timeout(function() {
-            var spinnerWrapper = elem.find('.spinner--wrapper');
-            scope.spinning = false;
-          }, waitTime);
+                    scope.spinning = true;
+
+                    $timeout(function() {
+                        var spinnerWrapper = elem.find('.spinner--wrapper');
+                        scope.spinning = false;
+                    }, waitTime);
+                };
+
+                var pieChartConfig = {
+                    element: "#chease-picker-graph",
+                    width: 960,
+                    height: 450,
+                    colors: ["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"],
+                    // CHEASE
+                    // Career Health Exercise Art Social Environment
+                    slices: {
+                        Career: 2,
+                        Health: 1,
+                        Exercise: 1,
+                        Art: 3,
+                        Social: 1,
+                        Environment: 1,
+                    },
+                }
+
+                PieChart.init(pieChartConfig);
+
+                // d3.select(".randomize")
+                //     .on("click", function(){
+                //         PieChart.change(mapData());
+                //     });
+            }
         };
+}])
 
-        function randomIntFromInterval(min, max) {
-          return Math.floor(Math.random() * (max - min + 1) + min);
-        }
+// Modified from http://bl.ocks.org/dbuezas/9306799
+.service('PieChart', ['$timeout', function($timeout){
+    var config;
+    var svg;
+    var pie;
+    var radius;
+    var arc;
+    var outerArc;
+    var sliceColors;
 
-        // mapData
-        function mapData() {
-          var labels = colorChease.domain();
-          return labels.map(function(label) {
-            return { label: label, value: cheaseDict[label] }
-          });
-        }
+    var key = function(d){
+        return d.data.label;
+    };
 
+    // mapData
+    function mapData() {
+        var labels = sliceColors.domain();
+        return labels.map(function(label) {
+            return { label: label, value: config.slices[label] }
+        });
+    }
 
-        // change
-        function change(data) {
-          function midAngle(d){
-            return d.startAngle + (d.endAngle - d.startAngle)/2;
-          }
+    this.init = function(_config) {
+        config = _config;
 
+       svg = d3.select(config.element)
+            .append("svg")
+            .append("g");
 
-          /* ------- PIE SLICES -------*/
-          var slice = svg.select(".slices").selectAll("path.slice")
-            .data(pie(data), key);
+        svg.append("g")
+            .attr("class", "slices");
+        svg.append("g")
+            .attr("class", "labels");
+        svg.append("g")
+            .attr("class", "lines");
 
-          slice.enter()
-            .insert("path")
-            .style("fill", function(d) { return colorChease(d.data.label); })
-            .attr("class", "slice");
+        radius = Math.min(config.width, config.height) / 2;
 
-          slice
-            .transition().duration(1000)
-            .attrTween("d", function(d) {
-              this._current = this._current || d;
-              var interpolate = d3.interpolate(this._current, d);
-              this._current = interpolate(0);
-              return function(t) {
-                return arc(interpolate(t));
-              };
+        pie = d3.layout.pie()
+            .sort(null)
+            .value(function(d) {
+                return d.value;
             });
 
-          slice.exit()
+        arc = d3.svg.arc()
+            .outerRadius(radius * 0.8)
+            .innerRadius(radius * 0.4);
+
+        outerArc = d3.svg.arc()
+            .innerRadius(radius * 0.9)
+            .outerRadius(radius * 0.9);
+
+        svg.attr("transform", "translate(" + config.width / 2 + "," + config.height / 2 + ")");
+
+        var sliceLabels = Object.keys(config.slices);
+
+        sliceColors = d3.scale.ordinal()
+            .domain(sliceLabels)
+            .range(config.colors);
+
+        change(mapData())
+    };
+
+    // change
+    var change = function(data) {
+        function midAngle(d){
+            return d.startAngle + (d.endAngle - d.startAngle)/2;
+        }
+
+
+        /* ------- PIE SLICES -------*/
+        var slice = svg.select(".slices").selectAll("path.slice")
+            .data(pie(data), key);
+
+        slice.enter()
+            .insert("path")
+            .style("fill", function(d) { return sliceColors(d.data.label); })
+            .attr("class", "slice");
+
+        slice
+            .transition().duration(1000)
+            .attrTween("d", function(d) {
+                this._current = this._current || d;
+                var interpolate = d3.interpolate(this._current, d);
+                this._current = interpolate(0);
+                return function(t) {
+                    return arc(interpolate(t));
+                };
+            });
+
+        slice.exit()
             .remove();
 
 
-          /* ------- TEXT LABELS -------*/
+        /* ------- TEXT LABELS -------*/
 
-          var text = svg.select(".labels").selectAll("text")
+        var text = svg.select(".labels").selectAll("text")
             .data(pie(data), key);
 
-          text.enter()
+        text.enter()
             .append("text")
             .attr("dy", ".35em")
             .text(function(d) {
-              return d.data.label;
+                return d.data.label;
             });
 
-          text.transition().duration(1000)
+        text.transition().duration(1000)
             .attrTween("transform", function(d) {
-              this._current = this._current || d;
-              var interpolate = d3.interpolate(this._current, d);
-              this._current = interpolate(0);
-              return function(t) {
-                var d2 = interpolate(t);
-                var pos = outerArc.centroid(d2);
-                pos[0] = radius * (midAngle(d2) < Math.PI ? 1 : -1);
-                return "translate("+ pos +")";
-              };
+                this._current = this._current || d;
+                var interpolate = d3.interpolate(this._current, d);
+                this._current = interpolate(0);
+                return function(t) {
+                    var d2 = interpolate(t);
+                    var pos = outerArc.centroid(d2);
+                    pos[0] = radius * (midAngle(d2) < Math.PI ? 1 : -1);
+                    return "translate("+ pos +")";
+                };
             })
             .styleTween("text-anchor", function(d){
-              this._current = this._current || d;
-              var interpolate = d3.interpolate(this._current, d);
-              this._current = interpolate(0);
-              return function(t) {
-                var d2 = interpolate(t);
-                return midAngle(d2) < Math.PI ? "start":"end";
-              };
+                this._current = this._current || d;
+                var interpolate = d3.interpolate(this._current, d);
+                this._current = interpolate(0);
+                return function(t) {
+                    var d2 = interpolate(t);
+                    return midAngle(d2) < Math.PI ? "start":"end";
+                };
             });
 
-          text.exit()
+        text.exit()
             .remove();
 
 
-          /* ------- SLICE TO TEXT POLYLINES -------*/
+        /* ------- SLICE TO TEXT POLYLINES -------*/
 
-          var polyline = svg.select(".lines").selectAll("polyline")
+        var polyline = svg.select(".lines").selectAll("polyline")
             .data(pie(data), key);
 
-          polyline.enter()
+        polyline.enter()
             .append("polyline");
 
-          polyline.transition().duration(1000)
+        polyline.transition().duration(1000)
             .attrTween("points", function(d){
-              this._current = this._current || d;
-              var interpolate = d3.interpolate(this._current, d);
-              this._current = interpolate(0);
-              return function(t) {
-                var d2 = interpolate(t);
-                var pos = outerArc.centroid(d2);
-                pos[0] = radius * 0.95 * (midAngle(d2) < Math.PI ? 1 : -1);
-                return [arc.centroid(d2), outerArc.centroid(d2), pos];
-              };
+                this._current = this._current || d;
+                var interpolate = d3.interpolate(this._current, d);
+                this._current = interpolate(0);
+                return function(t) {
+                    var d2 = interpolate(t);
+                    var pos = outerArc.centroid(d2);
+                    pos[0] = radius * 0.95 * (midAngle(d2) < Math.PI ? 1 : -1);
+                    return [arc.centroid(d2), outerArc.centroid(d2), pos];
+                };
             });
 
-          polyline.exit()
+        polyline.exit()
             .remove();
-        };
-
-        var key = function(d){
-          return d.data.label;
-        };
-
-        var svg = d3.select("#chease-picker-graph")
-          .append("svg")
-          .append("g");
-
-        svg.append("g")
-          .attr("class", "slices");
-        svg.append("g")
-          .attr("class", "labels");
-        svg.append("g")
-          .attr("class", "lines");
-
-        var width = 960;
-        var height = 450;
-        var radius = Math.min(width, height) / 2;
-
-        var pie = d3.layout.pie()
-          .sort(null)
-          .value(function(d) {
-            return d.value;
-          });
-
-        var arc = d3.svg.arc()
-          .outerRadius(radius * 0.8)
-          .innerRadius(radius * 0.4);
-
-        var outerArc = d3.svg.arc()
-          .innerRadius(radius * 0.9)
-          .outerRadius(radius * 0.9);
-
-        svg.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-
-        // CHEASE
-        // Career Health Exercise Art Social Environment
-        var cheaseDict = {
-          Career: 2,
-          Health: 1,
-          Exercise: 1,
-          Art: 3,
-          Social: 1,
-          Environment: 1,
-        };
-
-        var cheaseArray = Object.keys(cheaseDict);
-
-        var COLORS = ["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"];
-
-        var colorChease = d3.scale.ordinal()
-          .domain(cheaseArray)
-          .range(COLORS);
-
-        change(mapData());
-
-        d3.select(".randomize")
-          .on("click", function(){
-            change(mapData());
-          });
-      }
     };
 }]);
