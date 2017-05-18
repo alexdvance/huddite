@@ -1,6 +1,7 @@
 // app.scss
 // @import "scss-flex-grid/flex-grid";
 @import '../node_modules/scss-flex-grid/flex-grid';
+@import 'scss/media-queries';
 @import 'scss/colors';
 @import 'scss/animations';
 @import 'scss/backgrounds';
@@ -15,11 +16,20 @@
 
 .row {
   width: 100%;
+
+  @include tablet-down {
+    margin-left: 0;
+    margin-right: 0;
+  }
 }
 
 .vert-center-row {
   display: flex;
   align-items: center;
+}
+
+.main-section {
+  padding: 24px;
 }
 
 .toolbar {
