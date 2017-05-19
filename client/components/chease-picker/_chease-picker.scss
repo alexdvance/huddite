@@ -5,9 +5,11 @@
   position: relative;
 
   svg {
+    position: relative; //for z-index
     width: 680px;
     height: 100%;
-    position: relative; //for z-index
+    margin-left: 50%;
+    transform: translateX(-50%);
   }
 
   path.slice{
