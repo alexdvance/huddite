@@ -167,20 +167,16 @@ angular.module('hudditeApp')
 
 
             slices.append("polygon")
-               .attr("fill", "white")
+               .attr("fill", "lightgray")
                .attr("points", spinnerPointsDict[config.type])
                .attr('class', 'pointer')
-               .style('opacity', 1)
-               .attr("stroke", "black")
-               .attr("stroke-width", 2);
+               .style('opacity', 1);
 
             slices.append("circle")
                .attr("cx", 0)
                .attr("cy", spinnerCirclePointsDict[config.type])
                .attr("r", config.outerR/24)
-               .attr("fill", "white")
-               .attr("stroke", "black")
-               .attr("stroke-width", 2);
+               .attr("fill", "lightgray");
         };
 
 
