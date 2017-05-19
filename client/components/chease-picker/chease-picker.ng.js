@@ -18,30 +18,13 @@ angular.module('hudditeApp')
                     return Math.floor(Math.random() * (max - min + 1) + min);
                 }
 
-                scope.spin = function() {
-                    var LENGTH_OF_SPIN = 1000;
-                    var MIN_SPINS = 4;
-                    var INTERVALS = 360;
-                    var INTERVAL_LENGTH = LENGTH_OF_SPIN / INTERVALS;
-
-                    var randomIntervalCount = randomIntFromInterval(1, INTERVALS);
-                    var waitTime = 0;
-
-                    waitTime = LENGTH_OF_SPIN * MIN_SPINS;
-                    waitTime += INTERVAL_LENGTH  * randomIntervalCount;
-
-                    scope.spinning = true;
-
-                    $timeout(function() {
-                        var spinnerWrapper = elem.find('.spinner--wrapper');
-                        scope.spinning = false;
-                    }, waitTime);
-                };
-
                 var pieChartConfig = {
+                    type: 'twister',
                     element: "#chease-picker-graph",
-                    width: 960,
+                    width: 680,
                     height: 450,
+                    outerR: 280,
+                    innerR: 8,
                     colors: ["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"],
                     // CHEASE
                     // Career Health Exercise Art Social Environment
@@ -53,25 +36,33 @@ angular.module('hudditeApp')
                         Social: 1,
                         Environment: 1,
                     },
+                    minRotation: 1080,
+                    maxRotation: 7200
                 }
 
                 PieChart.init(pieChartConfig);
-
-                // d3.select(".randomize")
-                //     .on("click", function(){
-                //         PieChart.change(mapData());
-                //     });
+                scope.spin = function() {
+                    var spinResult = PieChart.spin();
+                    $timeout(function() {
+                        scope.spinResult = spinResult.selection.key.label;
+                    }, spinResult.duration);
+                }
             }
         };
 }])
 
 // Modified from http://bl.ocks.org/dbuezas/9306799
 .service('PieChart', ['$timeout', function($timeout){
+    const PI = 3.14159;
+    var running = false;
+    var boundaries = [];
+    var deg = 0;
     var config;
     var svg;
     var pie;
     var radius;
     var arc;
+    // var arcs, path, text;
     var outerArc;
 
     var key = function(d){
@@ -88,7 +79,7 @@ angular.module('hudditeApp')
             .value(function(d) {
                 return d.value;
             });
-    }
+    };
 
     var setupSVGElement = function() {
        svg = d3.select(config.element)
@@ -113,23 +104,8 @@ angular.module('hudditeApp')
             .outerRadius(radius * 0.9);
 
         svg.attr("transform", "translate(" + config.width / 2 + "," + config.height / 2 + ")");
-    }
-
-    this.init = function(_config) {
-        config = _config;
-
-        setupPie();
-        setupSVGElement();
-
-        var labels = Object.keys(config.slices);
-
-        // Creates d3 ordinal object with labels and colors
-        var sliceOrdinal = d3.scale.ordinal()
-            .domain(labels)
-            .range(config.colors);
-
-        drawPieChart(sliceOrdinal);
     };
+
 
     // drawPieChart
     var drawPieChart = function(sliceOrdinal) {
@@ -137,6 +113,14 @@ angular.module('hudditeApp')
         function drawSlices() {
             var slice = svg.select(".slices").selectAll("path.slice")
                 .data(pie(data), key);
+
+            pie(data).forEach(function(a) {
+                boundaries.push({
+                    key: a.data,
+                    start: a.startAngle,
+                    end: a.endAngle
+                });
+            });
 
             slice.enter()
                 .insert("path")
@@ -157,6 +141,47 @@ angular.module('hudditeApp')
             slice.exit()
                 .remove();
         }
+
+        /* ------- SPINNER -------*/
+        function drawSpinner() {
+            var slices = svg.select(".slices");
+
+            var spinnerPointsDict = {
+                wheelOfFortune: (-config.outerR/24) + ", " +
+                    (-config.outerR - config.outerR/12) + " " +
+                    (config.outerR/24) + "," +
+                    (-config.outerR - config.outerR/12) + " " +
+                    "0," +
+                    (-config.outerR - config.outerR/12 + 40),
+                twister: (-config.outerR/24) + ", " +
+                    "0 " +
+                    (config.outerR/24) + "," +
+                    " 0 " +
+                    " 0," +
+                    (-config.outerR/3)
+               };
+            var spinnerCirclePointsDict = {
+                wheelOfFortune: -config.outerR - config.outerR/12,
+                twister: 0
+            };
+
+
+            slices.append("polygon")
+               .attr("fill", "white")
+               .attr("points", spinnerPointsDict[config.type])
+               .attr('class', 'pointer')
+               .style('opacity', 1)
+               .attr("stroke", "black")
+               .attr("stroke-width", 2);
+
+            slices.append("circle")
+               .attr("cx", 0)
+               .attr("cy", spinnerCirclePointsDict[config.type])
+               .attr("r", config.outerR/24)
+               .attr("fill", "white")
+               .attr("stroke", "black")
+               .attr("stroke-width", 2);
+        };
 
 
         /* ------- TEXT LABELS -------*/
@@ -223,12 +248,84 @@ angular.module('hudditeApp')
                 .remove();
         }
 
-        var data = sliceOrdinal.domain().map(function(label) {
+        var labels = sliceOrdinal.domain();
+
+        var data = labels.map(function(label) {
             return { label: label, value: config.slices[label] }
         });
 
         drawSlices();
+        drawSpinner();
         drawLabels();
         drawPolylines();
+    };
+
+
+    var init = function(_config) {
+        config = _config;
+
+        setupPie();
+        setupSVGElement();
+
+        var labels = Object.keys(config.slices);
+
+        // Creates d3 ordinal object with labels and colors
+        var sliceOrdinal = d3.scale.ordinal()
+            .domain(labels)
+            .range(config.colors);
+
+        drawPieChart(sliceOrdinal);
+    };
+
+    var selectedSlice = function(deg) {
+        deg = deg % 360;
+        // For the twister spinner, cross multiply to convert
+        // degrees to fraction out of 2πr (r = 1)
+        // deg/360 === X/(2 * PI)
+        var pointerDict = {
+            'wheelOfFortune': (360 - deg)*(PI/180),
+            'twister': (deg * PI * 2)/360
+        };
+
+        var pointer = pointerDict[config.type];
+        var result;
+
+        boundaries.forEach(function(x) {
+            if (x.start < pointer && x.end > pointer) {
+                result = x;
+            }
+        });
+        return result;
+    };
+
+    var spin = function(degrees, duration) {
+        var tagToSpinDict = {
+            'wheelOfFortune': 'g.slice',
+            'twister': 'polygon',
+        }
+
+        var running = !running;
+
+        if (!running) { spin(); }
+
+        deg = degrees || Math.floor( (Math.random() * config.maxRotation) + config.minRotation);
+        duration = (duration !== undefined) ? duration : (deg*500)/360;
+
+        svg.selectAll(tagToSpinDict[config.type]).transition()
+            .ease("quad-out")
+            .duration(duration)
+            .attrTween("transform", function() {
+                return d3.interpolateString("rotate(0)", "rotate(" + deg + ")");
+            });
+
+        return {
+            duration: duration,
+            selection: selectedSlice(deg)
+        };
+    };
+
+    return {
+        init: init,
+        spin: spin
     };
 }]);
