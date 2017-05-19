@@ -13,49 +13,53 @@
 <div class="main container" layout="row">
     <div class="row">
         <div class="col-xs-6 bg-orange">
-            <h2>Things</h2>
-            <form class="md-whiteframe-z1" ng-submit="save()" name="form"
-                  novalidate layout-padding="">
-                <p>Add a thing</p>
-                <md-input-container>
-                    <label>Name</label>
-                    <input ng-model="newThing.name" placeholder="Name">
-                </md-input-container>
-                <md-input-container>
-                    <label>Recurrence</label>
-                    <input ng-model="newThing.recurrence" placeholder="Recurrence (in days)">
-                </md-input-container>
-                <input class="md-button" type="submit" value="Add">
-            </form>
+            <div class="main-section">
+                <h2>Things</h2>
+                <form class="md-whiteframe-z1" ng-submit="save()" name="form"
+                      novalidate layout-padding="">
+                    <p>Add a thing</p>
+                    <md-input-container>
+                        <label>Name</label>
+                        <input ng-model="newThing.name" placeholder="Name">
+                    </md-input-container>
+                    <md-input-container>
+                        <label>Recurrence</label>
+                        <input ng-model="newThing.recurrence" placeholder="Recurrence (in days)">
+                    </md-input-container>
+                    <input class="md-button" type="submit" value="Add">
+                </form>
+            </div>
         </div>
 
         <div class="col-xs-6">
-            <div layout="row" layout-padding="">
-                <md-input-container flex="65">
-                    <label>Search</label>
-                    <input type="Search" ng-model="search" placeholder="Search">
-                </md-input-container>
-                <md-select ng-model="orderProperty" flex="35">
-                    <md-option value="1">Ascending</md-option>
-                    <md-option value="-1">Descending</md-option>
-                </md-select>
+            <div class="main-section">
+                <div layout="row" layout-padding="">
+                    <md-input-container flex="65">
+                        <label>Search</label>
+                        <input type="Search" ng-model="search" placeholder="Search">
+                    </md-input-container>
+                    <md-select ng-model="orderProperty" flex="35">
+                        <md-option value="1">Ascending</md-option>
+                        <md-option value="-1">Descending</md-option>
+                    </md-select>
+                </div>
+
+                <ul class="list-reset">
+                    <li dir-paginate="thing in things | itemsPerPage: perPage"
+                        total-items="thingsCount.count" current-page="page"
+                        class="list-cool">
+                        (<span ng-bind="thing.recurrence"></span>)
+                        <span ng-bind="thing.name"></span>
+                        <div class="float-right">
+                            <button ng-click="update(thing)">Done</button>
+                            <button ng-click="remove(thing)">&times;</button>
+                        </div>
+                    </li>
+                </ul>
+                <dir-pagination-controls on-page-change="pageChanged(newPageNumber)"></dir-pagination-controls>
+
+                <div>Total number of things: <span ng-bind="thingsCount.count"></span></div>
             </div>
-
-            <ul class="list-reset">
-                <li dir-paginate="thing in things | itemsPerPage: perPage"
-                    total-items="thingsCount.count" current-page="page"
-                    class="list-cool">
-                    (<span ng-bind="thing.recurrence"></span>)
-                    <span ng-bind="thing.name"></span>
-                    <div class="float-right">
-                        <button ng-click="update(thing)">Done</button>
-                        <button ng-click="remove(thing)">&times;</button>
-                    </div>
-                </li>
-            </ul>
-            <dir-pagination-controls on-page-change="pageChanged(newPageNumber)"></dir-pagination-controls>
-
-            <div>Total number of things: <span ng-bind="thingsCount.count"></span></div>
         </div>
     </div>
 </div>
