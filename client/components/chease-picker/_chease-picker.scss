@@ -47,11 +47,15 @@
 }
 
 .spinner--pointer {
-    position: absolute;
-    left: 0;
-    right: 50%;
-    margin-right: -2px;
-    top: 0;
-    bottom: 50%;
-    border-right: 2px solid #757575;
+  position: absolute;
+  left: 0;
+  right: 50%;
+  margin-right: -2px;
+  top: 0;
+  bottom: 50%;
+  border-right: 2px solid #757575;
+}
+
+.spinner--config-row {
+  margin-bottom: 12px;
 }

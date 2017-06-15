@@ -18,6 +18,17 @@ angular.module('hudditeApp')
                     return Math.floor(Math.random() * (max - min + 1) + min);
                 }
 
+                // CHEASE
+                // Career Health Exercise Art Social Environment
+                var slices = scope.slices = [
+                    { label: 'Career', weight: 2 },
+                    { label: 'Health', weight: 1 },
+                    { label: 'Exercise', weight: 1 },
+                    { label: 'Art', weight: 3 },
+                    { label: 'Social', weight: 1 },
+                    { label: 'Environment', weight: 1 },
+                ];
+
                 var pieChartConfig = {
                     type: 'twister',
                     element: "#chease-picker-graph",
@@ -26,21 +37,19 @@ angular.module('hudditeApp')
                     outerR: 280,
                     innerR: 8,
                     colors: ["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"],
-                    // CHEASE
-                    // Career Health Exercise Art Social Environment
-                    slices: {
-                        Career: 2,
-                        Health: 1,
-                        Exercise: 1,
-                        Art: 3,
-                        Social: 1,
-                        Environment: 1,
-                    },
+                    slices: slices,
                     minRotation: 1080,
                     maxRotation: 7200
                 }
 
                 PieChart.init(pieChartConfig);
+
+                scope.updateChart = function() {
+                    pieChartConfig.slices = scope.slices;
+                    PieChart.init(pieChartConfig);
+
+                }
+
                 scope.spin = function() {
                     var spinResult = PieChart.spin();
                     $timeout(function() {
@@ -73,6 +82,16 @@ angular.module('hudditeApp')
         return d.startAngle + (d.endAngle - d.startAngle)/2;
     }
 
+    function arrayToObject(arr) {
+        var obj = {};
+
+        arr.forEach(function(item) {
+            obj[item.label] = item.weight;
+        });
+
+        return obj;
+    }
+
     var setupPie = function() {
         pie = d3.layout.pie()
             .sort(null)
@@ -82,28 +101,31 @@ angular.module('hudditeApp')
     };
 
     var setupSVGElement = function() {
-       svg = d3.select(config.element)
+        d3.select(config.element + ' svg')
+            .remove();
+
+        svg = d3.select(config.element)
             .append("svg")
             .append("g");
 
-        svg.append("g")
+         svg.append("g")
             .attr("class", "slices");
-        svg.append("g")
+         svg.append("g")
             .attr("class", "labels");
-        svg.append("g")
+         svg.append("g")
             .attr("class", "lines");
 
-        radius = Math.min(config.width, config.height) / 2;
+         radius = Math.min(config.width, config.height) / 2;
 
-        arc = d3.svg.arc()
+         arc = d3.svg.arc()
             .outerRadius(radius * 0.8)
             .innerRadius(radius * 0.4);
 
-        outerArc = d3.svg.arc()
+         outerArc = d3.svg.arc()
             .innerRadius(radius * 0.9)
             .outerRadius(radius * 0.9);
 
-        svg.attr("transform", "translate(" + config.width / 2 + "," + config.height / 2 + ")");
+         svg.attr("transform", "translate(" + config.width / 2 + "," + config.height / 2 + ")");
     };
 
 
@@ -263,6 +285,7 @@ angular.module('hudditeApp')
         setupPie();
         setupSVGElement();
 
+        config.slices = arrayToObject(config.slices);
         var labels = Object.keys(config.slices);
 
         // Creates d3 ordinal object with labels and colors

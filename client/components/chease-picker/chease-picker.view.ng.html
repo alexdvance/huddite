@@ -12,6 +12,29 @@
     </div>
   </div>
 
-
   <div id="chease-picker-graph" class="chease-picker-graph"></div>
+
+  <div class="row">
+    <div class="col-xs-4">
+      <button class="md-button btn-lightblue" ng-click="showConfig = true">Config</button>
+    </div>
+  </div>
+
+  <div class="clearfix"
+       ng-show="showConfig">
+    <div class="row spinner--config-row"
+         ng-repeat="slice in slices">
+      <div class="col-xs-4">
+        <input ng-model="slice.label" />
+      </div>
+      <div class="col-xs-4">
+        <input ng-model="slice.weight" />
+      </div>
+    </div>
+    <div class="row">
+    </div>
+    <div class="row">
+      <button class="md-button btn-lightblue" ng-click="updateChart()">Update</button>
+    </div>
+  </div>
 </div>
